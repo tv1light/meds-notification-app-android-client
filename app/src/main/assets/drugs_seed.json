@@ -1,0 +1,47 @@
+[
+  {
+    "serverId": 1,
+    "name": "Парацетамол",
+    "form": "таблетки",
+    "dosage": "500 мг",
+    "activeSubstance": "Парацетамол",
+    "country": "Россия",
+    "manufacturer": "Фармстандарт"
+  },
+  {
+    "serverId": 2,
+    "name": "Ибупрофен",
+    "form": "таблетки",
+    "dosage": "200 мг",
+    "activeSubstance": "Ибупрофен",
+    "country": "Польша",
+    "manufacturer": "Polpharma"
+  },
+  {
+    "serverId": 3,
+    "name": "Азитромицин",
+    "form": "капсулы",
+    "dosage": "500 мг",
+    "activeSubstance": "Азитромицин",
+    "country": "Индия",
+    "manufacturer": "Sun Pharma"
+  },
+  {
+    "serverId": 4,
+    "name": "Лоратадин",
+    "form": "таблетки",
+    "dosage": "10 мг",
+    "activeSubstance": "Лоратадин",
+    "country": "Россия",
+    "manufacturer": "Озон"
+  },
+  {
+    "serverId": 5,
+    "name": "Омепразол",
+    "form": "капсулы",
+    "dosage": "20 мг",
+    "activeSubstance": "Омепразол",
+    "country": "Германия",
+    "manufacturer": "Sandoz"
+  }
+]

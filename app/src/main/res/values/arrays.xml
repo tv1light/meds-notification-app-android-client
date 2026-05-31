@@ -1,0 +1,30 @@
+<resources>
+    <string-array name="schedule_type_labels">
+        <item>По временам</item>
+        <item>По интервалу</item>
+        <item>Курс-пауза</item>
+    </string-array>
+
+    <string-array name="schedule_type_values">
+        <item>EXACT_TIMES</item>
+        <item>INTERVAL</item>
+        <item>COURSE_PAUSE</item>
+    </string-array>
+
+    <string-array name="notification_type_labels">
+        <item>Баннер</item>
+        <item>Звук</item>
+        <item>Вибрация</item>
+    </string-array>
+
+    <string-array name="notification_type_values">
+        <item>BANNER</item>
+        <item>SOUND</item>
+        <item>VIBRATION</item>
+    </string-array>
+
+    <string-array name="course_sort_labels">
+        <item>По дате начала</item>
+        <item>По названию препарата</item>
+    </string-array>
+</resources>
