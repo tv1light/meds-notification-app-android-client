@@ -1,16 +1,4 @@
 <resources>
-    <string-array name="schedule_type_labels">
-        <item>По временам</item>
-        <item>По интервалу</item>
-        <item>Курс-пауза</item>
-    </string-array>
-
-    <string-array name="schedule_type_values">
-        <item>EXACT_TIMES</item>
-        <item>INTERVAL</item>
-        <item>COURSE_PAUSE</item>
-    </string-array>
-
     <string-array name="notification_type_labels">
         <item>Баннер</item>
         <item>Звук</item>
@@ -26,5 +14,17 @@
     <string-array name="course_sort_labels">
         <item>По дате начала</item>
         <item>По названию препарата</item>
+    </string-array>
+
+    <string-array name="theme_mode_labels">
+        <item>Как в системе</item>
+        <item>Светлая</item>
+        <item>Темная</item>
+    </string-array>
+
+    <string-array name="theme_mode_values">
+        <item>SYSTEM</item>
+        <item>LIGHT</item>
+        <item>DARK</item>
     </string-array>
 </resources>

@@ -2,6 +2,7 @@ package com.medreminder.data.remote.api;
 
 import com.medreminder.data.remote.dto.AuthResponse;
 import com.medreminder.data.remote.dto.DrugDto;
+import com.medreminder.data.remote.dto.DrugUpsertRequest;
 import com.medreminder.data.remote.dto.HealthResponse;
 import com.medreminder.data.remote.dto.LoginRequest;
 import com.medreminder.data.remote.dto.RegisterRequest;
@@ -23,6 +24,10 @@ public interface MedReminderApi {
 
     @GET("api/drugs")
     Call<List<DrugDto>> getDrugs();
+
+    // Optional endpoint for admin dictionary updates.
+    @POST("api/drugs")
+    Call<DrugDto> createDrug(@Body DrugUpsertRequest request);
 
     @GET("api/health")
     Call<HealthResponse> health();

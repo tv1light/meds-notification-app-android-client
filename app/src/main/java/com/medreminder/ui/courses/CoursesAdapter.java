@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.medreminder.R;
@@ -28,11 +29,40 @@ public class CoursesAdapter extends RecyclerView.Adapter<CoursesAdapter.CourseVH
     }
 
     public void submit(List<CourseWithDrug> data) {
+        List<CourseWithDrug> newItems = data == null ? new ArrayList<>() : new ArrayList<>(data);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return items.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newItems.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return items.get(oldItemPosition).courseId == newItems.get(newItemPosition).courseId;
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                CourseWithDrug oldItem = items.get(oldItemPosition);
+                CourseWithDrug newItem = newItems.get(newItemPosition);
+                return oldItem.drugId == newItem.drugId
+                        && oldItem.startDate == newItem.startDate
+                        && oldItem.endDate == newItem.endDate
+                        && equalsNullable(oldItem.drugName, newItem.drugName)
+                        && equalsNullable(oldItem.dosageText, newItem.dosageText)
+                        && equalsNullable(oldItem.scheduleType, newItem.scheduleType)
+                        && oldItem.isActive == newItem.isActive;
+            }
+        });
+
         items.clear();
-        if (data != null) {
-            items.addAll(data);
-        }
-        notifyDataSetChanged();
+        items.addAll(newItems);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
@@ -46,10 +76,14 @@ public class CoursesAdapter extends RecyclerView.Adapter<CoursesAdapter.CourseVH
     public void onBindViewHolder(@NonNull CourseVH holder, int position) {
         CourseWithDrug item = items.get(position);
         holder.tvCourseDrug.setText(item.drugName);
-        String info = item.dosageText + " • " + DateTimeUtils.formatDate(item.startDate) + " - " + DateTimeUtils.formatDate(item.endDate);
-        holder.tvCourseInfo.setText(info);
+        holder.tvCourseInfo.setText(holder.itemView.getContext().getString(
+                R.string.course_info_template,
+                item.dosageText,
+                DateTimeUtils.formatDate(item.startDate),
+                DateTimeUtils.formatDate(item.endDate)
+        ));
         boolean active = item.endDate >= DateTimeUtils.startOfDay(System.currentTimeMillis());
-        holder.tvCourseState.setText(active ? "Активный" : "Завершён");
+        holder.tvCourseState.setText(active ? R.string.course_active : R.string.course_finished);
         holder.itemView.setOnClickListener(v -> clickListener.onClick(item));
     }
 
@@ -69,5 +103,12 @@ public class CoursesAdapter extends RecyclerView.Adapter<CoursesAdapter.CourseVH
             tvCourseInfo = itemView.findViewById(R.id.tvCourseInfo);
             tvCourseState = itemView.findViewById(R.id.tvCourseState);
         }
+    }
+
+    private boolean equalsNullable(String left, String right) {
+        if (left == null) {
+            return right == null;
+        }
+        return left.equals(right);
     }
 }

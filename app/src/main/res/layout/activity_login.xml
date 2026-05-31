@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:text="MedReminder"
+            android:text="@string/app_name"
             android:textColor="@color/md_primary"
             android:textSize="34sp"
             android:textStyle="bold" />
@@ -26,7 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Ваш личный помощник по приёму лекарств"
+            android:text="@string/login_subtitle"
             android:textColor="@color/md_text_secondary" />
 
         <com.google.android.material.card.MaterialCardView

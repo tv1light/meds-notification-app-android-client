@@ -1,0 +1,20 @@
+<resources>
+    <color name="md_primary">#5AA9E6</color>
+    <color name="md_primary_variant">#2B5F88</color>
+    <color name="md_secondary">#49C1C4</color>
+    <color name="md_background">#0F141B</color>
+    <color name="md_surface">#151D27</color>
+    <color name="md_text_primary">#E7EEF8</color>
+    <color name="md_text_secondary">#A8B3C5</color>
+
+    <color name="status_taken">#66BB6A</color>
+    <color name="status_skipped">#EF5350</color>
+    <color name="status_postponed">#FFB74D</color>
+    <color name="status_planned">#90A4AE</color>
+
+    <color name="status_chip_background">#243041</color>
+    <color name="bg_gradient_start">#182437</color>
+    <color name="bg_gradient_end">#0E1520</color>
+    <color name="status_bar_color">#0E1520</color>
+    <color name="navigation_bar_color">#111927</color>
+</resources>

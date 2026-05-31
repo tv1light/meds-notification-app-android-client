@@ -2,7 +2,6 @@ package com.medreminder.ui.course_edit;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -244,26 +243,14 @@ public class CourseEditActivity extends AppCompatActivity {
 
         int initialHour = Math.max(0, Math.min(23, initialMinutes / 60));
         int initialMinute = Math.max(0, Math.min(59, initialMinutes % 60));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            timePicker.setHour(initialHour);
-            timePicker.setMinute(initialMinute);
-        } else {
-            timePicker.setCurrentHour(initialHour);
-            timePicker.setCurrentMinute(initialMinute);
-        }
+        timePicker.setHour(initialHour);
+        timePicker.setMinute(initialMinute);
 
         new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setPositiveButton(R.string.action_save, (dialog, which) -> {
-                    int hour;
-                    int minute;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        hour = timePicker.getHour();
-                        minute = timePicker.getMinute();
-                    } else {
-                        hour = timePicker.getCurrentHour();
-                        minute = timePicker.getCurrentMinute();
-                    }
+                    int hour = timePicker.getHour();
+                    int minute = timePicker.getMinute();
                     listener.onSelected(hour * 60 + minute);
                 })
                 .setNegativeButton(R.string.action_cancel, null)
@@ -291,7 +278,7 @@ public class CourseEditActivity extends AppCompatActivity {
     }
 
     private void updateNotifyBeforeView() {
-        etNotifyBefore.setText(selectedNotifyBeforeMinutes + " мин");
+        etNotifyBefore.setText(getString(R.string.minutes_short_template, selectedNotifyBeforeMinutes));
     }
 
     private String formatMinutes(int totalMinutes) {
@@ -421,11 +408,8 @@ public class CourseEditActivity extends AppCompatActivity {
         DrugEntity selectedByName = findDrugByName(drugName);
         if (selectedByName != null) {
             selectedDrugId = selectedByName.id;
-        }
-
-        if (selectedDrugId <= 0) {
-            toast("Выберите препарат из справочника");
-            return;
+        } else {
+            selectedDrugId = -1L;
         }
 
         String dosage = etDosage.getText() == null ? "" : etDosage.getText().toString().trim();
@@ -465,6 +449,33 @@ public class CourseEditActivity extends AppCompatActivity {
             return;
         }
 
+        if (selectedDrugId <= 0) {
+            if (!ValidationUtils.isValidDrugText(drugName, 2, 50)) {
+                toast(getString(R.string.validation_drug_name));
+                return;
+            }
+            btnSave.setEnabled(false);
+            drugRepository.createOrGetCustomDrug(drugName, dosage, new RepositoryCallback<>() {
+                @Override
+                public void onSuccess(DrugEntity value) {
+                    selectedDrugId = value.id;
+                    etDrug.setText(value.name, false);
+                    persistCourse(dosage);
+                }
+
+                @Override
+                public void onError(String message) {
+                    btnSave.setEnabled(true);
+                    toast(message);
+                }
+            });
+            return;
+        }
+
+        persistCourse(dosage);
+    }
+
+    private void persistCourse(String dosage) {
         TherapyCourseEntity course = editingCourse != null ? editingCourse : new TherapyCourseEntity();
         course.drugId = selectedDrugId;
         course.dosageText = dosage;

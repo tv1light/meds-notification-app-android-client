@@ -1,14 +1,17 @@
 package com.medreminder.notification;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.content.pm.PackageManager;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import com.medreminder.R;
 import com.medreminder.ui.main.MainActivity;
@@ -18,9 +21,6 @@ public final class NotificationHelper {
     private NotificationHelper() {}
 
     public static void createChannel(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         if (manager == null) {
             return;
@@ -74,7 +74,16 @@ public final class NotificationHelper {
             }
         }
 
-        NotificationManagerCompat.from(context).notify((int) reminderId, builder.build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        try {
+            NotificationManagerCompat.from(context).notify((int) reminderId, builder.build());
+        } catch (SecurityException ignored) {
+            // Permission can be revoked while app is running. Notification is safely skipped.
+        }
     }
 
     private static PendingIntent actionIntent(Context context, String action, long reminderId) {

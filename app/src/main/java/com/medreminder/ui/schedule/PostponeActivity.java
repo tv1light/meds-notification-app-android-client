@@ -2,7 +2,6 @@ package com.medreminder.ui.schedule;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.Button;
@@ -42,25 +41,13 @@ public class PostponeActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(plannedTime);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            timePicker.setHour(calendar.get(Calendar.HOUR_OF_DAY));
-            timePicker.setMinute(calendar.get(Calendar.MINUTE));
-        } else {
-            timePicker.setCurrentHour(calendar.get(Calendar.HOUR_OF_DAY));
-            timePicker.setCurrentMinute(calendar.get(Calendar.MINUTE));
-        }
+        timePicker.setHour(calendar.get(Calendar.HOUR_OF_DAY));
+        timePicker.setMinute(calendar.get(Calendar.MINUTE));
 
         Button btnSave = findViewById(R.id.btnSavePostpone);
         btnSave.setOnClickListener(v -> {
-            int hour;
-            int minute;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                hour = timePicker.getHour();
-                minute = timePicker.getMinute();
-            } else {
-                hour = timePicker.getCurrentHour();
-                minute = timePicker.getCurrentMinute();
-            }
+            int hour = timePicker.getHour();
+            int minute = timePicker.getMinute();
 
             Calendar target = Calendar.getInstance();
             target.setTimeInMillis(selectedDateStart);

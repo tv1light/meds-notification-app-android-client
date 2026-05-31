@@ -1,5 +1,7 @@
 package com.medreminder.util;
 
+import java.util.Locale;
+
 public final class ValidationUtils {
     private static final float MIN_DOSAGE_MG = 0.001f; // 1 mcg
     private static final float MAX_DOSAGE_MG = 100_000f; // 100 g
@@ -22,7 +24,7 @@ public final class ValidationUtils {
         if (dosageText == null) {
             return false;
         }
-        String value = dosageText.trim().toLowerCase();
+        String value = dosageText.trim().toLowerCase(Locale.ROOT);
         if (value.isEmpty()) {
             return false;
         }

@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -37,11 +38,40 @@ public class TodayReminderAdapter extends RecyclerView.Adapter<TodayReminderAdap
     }
 
     public void submit(List<ReminderWithCourseDrug> data) {
+        List<ReminderWithCourseDrug> newItems = data == null ? new ArrayList<>() : new ArrayList<>(data);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return items.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newItems.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return items.get(oldItemPosition).reminderId == newItems.get(newItemPosition).reminderId;
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                ReminderWithCourseDrug oldItem = items.get(oldItemPosition);
+                ReminderWithCourseDrug newItem = newItems.get(newItemPosition);
+                return oldItem.courseId == newItem.courseId
+                        && oldItem.drugId == newItem.drugId
+                        && oldItem.plannedDateTime == newItem.plannedDateTime
+                        && equalsNullable(oldItem.drugName, newItem.drugName)
+                        && equalsNullable(oldItem.dosageText, newItem.dosageText)
+                        && equalsNullable(oldItem.status, newItem.status)
+                        && equalsNullable(oldItem.notificationType, newItem.notificationType);
+            }
+        });
+
         items.clear();
-        if (data != null) {
-            items.addAll(data);
-        }
-        notifyDataSetChanged();
+        items.addAll(newItems);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
@@ -108,5 +138,12 @@ public class TodayReminderAdapter extends RecyclerView.Adapter<TodayReminderAdap
             btnSkip = itemView.findViewById(R.id.btnSkip);
             btnPostpone = itemView.findViewById(R.id.btnPostpone);
         }
+    }
+
+    private boolean equalsNullable(String left, String right) {
+        if (left == null) {
+            return right == null;
+        }
+        return left.equals(right);
     }
 }

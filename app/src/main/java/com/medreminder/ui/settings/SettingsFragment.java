@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.medreminder.R;
 import com.medreminder.data.local.entity.AppSettingsEntity;
 import com.medreminder.data.repository.DrugRepository;
@@ -20,9 +22,8 @@ import com.medreminder.data.repository.RepositoryCallback;
 import com.medreminder.data.repository.SessionRepository;
 import com.medreminder.data.repository.SettingsRepository;
 import com.medreminder.ui.auth.LoginActivity;
+import com.medreminder.util.ThemeModeManager;
 import com.medreminder.util.WorkScheduler;
-
-import java.util.Calendar;
 
 public class SettingsFragment extends Fragment {
     private SettingsRepository settingsRepository;
@@ -30,11 +31,15 @@ public class SettingsFragment extends Fragment {
     private SessionRepository sessionRepository;
 
     private EditText etServerUrl;
+    private MaterialAutoCompleteTextView etThemeMode;
     private SwitchMaterial swQuiet;
     private EditText etQuietFrom;
     private EditText etQuietTo;
 
     private AppSettingsEntity currentSettings;
+    private String[] themeLabels;
+    private String[] themeValues;
+    private String selectedThemeMode = ThemeModeManager.MODE_SYSTEM;
 
     public SettingsFragment() {
         super(R.layout.fragment_settings);
@@ -49,6 +54,7 @@ public class SettingsFragment extends Fragment {
         sessionRepository = new SessionRepository(requireContext());
 
         etServerUrl = view.findViewById(R.id.etServerUrl);
+        etThemeMode = view.findViewById(R.id.etThemeMode);
         swQuiet = view.findViewById(R.id.swQuietMode);
         etQuietFrom = view.findViewById(R.id.etQuietFrom);
         etQuietTo = view.findViewById(R.id.etQuietTo);
@@ -56,6 +62,8 @@ public class SettingsFragment extends Fragment {
         MaterialButton btnCheck = view.findViewById(R.id.btnCheckConnection);
         MaterialButton btnSync = view.findViewById(R.id.btnSyncDrugs);
         MaterialButton btnLogout = view.findViewById(R.id.btnLogout);
+
+        setupThemePicker();
 
         etQuietFrom.setOnClickListener(v -> showTimePicker(etQuietFrom));
         etQuietTo.setOnClickListener(v -> showTimePicker(etQuietTo));
@@ -137,6 +145,48 @@ public class SettingsFragment extends Fragment {
         entity.quietModeStart = safe(etQuietFrom.getText(), "22:00");
         entity.quietModeEnd = safe(etQuietTo.getText(), "07:00");
         settingsRepository.save(entity, afterSave);
+    }
+
+    private void setupThemePicker() {
+        themeLabels = getResources().getStringArray(R.array.theme_mode_labels);
+        themeValues = getResources().getStringArray(R.array.theme_mode_values);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_list_item_1,
+                themeLabels
+        );
+        etThemeMode.setAdapter(adapter);
+        etThemeMode.setOnClickListener(v -> etThemeMode.showDropDown());
+
+        selectedThemeMode = ThemeModeManager.getThemeMode(requireContext());
+        setThemeSelection(selectedThemeMode);
+
+        etThemeMode.setOnItemClickListener((parent, view, position, id) -> {
+            if (position < 0 || position >= themeValues.length) {
+                return;
+            }
+            String newMode = themeValues[position];
+            if (newMode.equals(selectedThemeMode)) {
+                return;
+            }
+            selectedThemeMode = newMode;
+            ThemeModeManager.setThemeMode(requireContext(), newMode);
+            requireActivity().recreate();
+        });
+    }
+
+    private void setThemeSelection(String mode) {
+        if (themeValues == null || themeLabels == null || themeValues.length != themeLabels.length) {
+            return;
+        }
+        for (int i = 0; i < themeValues.length; i++) {
+            if (themeValues[i].equalsIgnoreCase(mode)) {
+                etThemeMode.setText(themeLabels[i], false);
+                return;
+            }
+        }
+        etThemeMode.setText(themeLabels[0], false);
     }
 
     private void showLogoutDialog() {
